@@ -1,30 +1,47 @@
+// PingPongOS - PingPong Operating System
+// Prof. Carlos A. Maziero, DINF UFPR
+// Versão 1.1 -- Julho de 2016
+
+// Teste da preempção por tempo
+
 #include <stdio.h>
 #include <stdlib.h>
 #include "ppos.h"
 
-// operating system check
-#if defined(_WIN32) || (!defined(__unix__) && !defined(__unix) && (!defined(__APPLE__) || !defined(__MACH__)))
-#warning Este codigo foi planejado para ambientes UNIX (LInux, *BSD, MacOS). A compilacao e execucao em outros ambientes e responsabilidade do usuario.
-#endif
+#define WORKLOAD 20000
 
 task_t Pang, Peng, Ping, Pong, Pung ;
 
+// simula um processamento pesado
+int hardwork (int n)
+{
+   int i, j, soma ;
+
+   soma = 0 ;
+   for (i=0; i<n; i++)
+      for (j=0; j<n; j++)
+         soma += j ;
+   return (soma) ;
+}
+
+// corpo das threads
 void Body (void * arg)
 {
-   int i,j ;
+   int i ;
 
+   printf ("%s: inicio\n", (char *) arg) ;
    for (i=0; i<10; i++)
    {
-      printf ("%s %d\n", (char *) arg, i) ;
-      for (j=0; j<10000000; j++) ;
+      printf ("%s: %d\n", (char *) arg, i) ;
+      hardwork (WORKLOAD) ;
    }
-   printf ("%s FIM\n", (char *) arg) ;
+   printf ("%s: fim\n", (char *) arg) ;
    task_exit (0) ;
 }
 
 int main (int argc, char *argv[])
 {
-   printf ("Main INICIO\n");
+   printf ("main: inicio\n");
 
    ppos_init () ;
 
@@ -40,6 +57,6 @@ int main (int argc, char *argv[])
    task_join(&Pong);
    task_join(&Pung);
 
-   printf ("Main FIM\n");
+   printf ("main: fim\n");
    exit (0);
 }

@@ -15,7 +15,7 @@
 struct sigaction action ;
 
 // estrutura de inicialização to timer
-struct itimerval timer ;
+struct itimerval timer;
 
 // tratador do sinal
 void tratador (int signum)
@@ -25,7 +25,7 @@ void tratador (int signum)
 
 int main ()
 {
-  // registra a ação para o sinal de timer SIGALRM
+  // registra a a��o para o sinal de timer SIGALRM
   action.sa_handler = tratador ;
   sigemptyset (&action.sa_mask) ;
   action.sa_flags = 0 ;

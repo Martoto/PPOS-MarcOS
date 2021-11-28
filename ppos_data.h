@@ -23,10 +23,23 @@ typedef struct task_t
    struct task_t* joinQueue;
    int exitCode;
    unsigned int awakeTime; // used to store the time when it should be waked up
+   int userTask;
+
+
+    int ticks_executados;    
+    unsigned int activations;
+   unsigned int ticks_processador;     
+   int task;                 
+   unsigned int quanta;           
+
+   
 
    // ... (outros campos deve ser adicionados APOS esse comentario)
    
 } task_t ;
+
+
+
 
 // estrutura que define um semáforo
 typedef struct {

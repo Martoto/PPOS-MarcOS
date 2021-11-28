@@ -13,18 +13,15 @@
 // estrutura que define um tratador de sinal (deve ser global ou static)
 struct sigaction action ;
 
-int sair = 0;
-
-/* funÃ§Ã£o que tratarÃ¡ os sinais recebidos */
+/* função que tratará os sinais recebidos */
 void tratador (int signum)
 {
    printf ("Recebi o sinal %d\n", signum) ;
-   sair = (signum == SIGINT);
 }
 
 int main (void)
 {
-   // registra a aÃ§Ã£o para o sinal SIGINT
+   // registra a aï¿½ï¿½o para o sinal SIGINT
    action.sa_handler = tratador ;
    sigemptyset (&action.sa_mask) ;
    action.sa_flags = 0 ;
@@ -34,8 +31,6 @@ int main (void)
       exit (1) ;
    }
 
-   /* laÃ§o vazio */
-   while (!sair) {
-      
-   };
+   /* laço vazio */
+   while (1) ;
 }

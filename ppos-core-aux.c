@@ -1,6 +1,9 @@
 #include "ppos.h"
 #include "ppos-core-globals.h"
+#include <signal.h>
+#include <sys/time.h>
 
+#define QUANTA
 
 // ****************************************************************************
 // Coloque aqui as suas modificações, p.ex. includes, defines variáveis, 
@@ -10,8 +13,54 @@
 // ****************************************************************************
 
 
+// estrutura que define um tratador de sinal (deve ser global ou static)
+struct sigaction action ;
+
+// estrutura de inicialização to timer
+struct itimerval timer;
+
+
+void tratadorPreemp() {
+    //conta ticks
+    systemTime += 1;
+    if(taskExec != NULL) {
+        if(taskExec->userTask == 1) {
+            taskExec->quanta -= 1;
+            taskExec->ticks_processador += 1;
+            if(taskExec->quanta <= 0) {
+                task_yield();
+            }
+        }
+    }
+}
+
+void timerInit() {
+    action.sa_handler = tratadorPreemp;
+    sigemptyset (&action.sa_mask) ;
+    action.sa_flags = 0 ;
+    if (sigaction (SIGALRM, &action, 0) < 0)
+    {
+        perror ("Erro em sigaction: ") ;
+        exit (1) ;
+    }
+
+    // ajusta valores do temporizador
+    timer.it_value.tv_usec = 1000 ;      // primeiro disparo, em micro-segundos
+    timer.it_value.tv_sec  =  0;      // primeiro disparo, em segundos
+    timer.it_interval.tv_usec = 1000 ;   // disparos subsequentes, em micro-segundos
+    timer.it_interval.tv_sec  = 0 ;   // disparos subsequentes, em segundos
+
+    // arma o temporizador ITIMER_REAL (vide man setitimer)
+    if (setitimer (ITIMER_REAL, &timer, 0) < 0)
+    {
+        perror ("Erro em setitimer: ") ;
+        exit (1) ;
+    }
+}
+
 
 void before_ppos_init () {
+    timerInit();
     // put your customization here
 #ifdef DEBUG
     printf("\ninit - BEFORE");
@@ -27,6 +76,9 @@ void after_ppos_init () {
 
 void before_task_create (task_t *task ) {
     // put your customization here
+    task->ticks_processador = 0;
+    task->userTask = 1;
+    task->activations = 0;
 #ifdef DEBUG
     printf("\ntask_create - BEFORE - [%d]", task->id);
 #endif
@@ -34,6 +86,7 @@ void before_task_create (task_t *task ) {
 
 void after_task_create (task_t *task ) {
     // put your customization here
+    task->ticks_executados = systime(); 
 #ifdef DEBUG
     printf("\ntask_create - AFTER - [%d]", task->id);
 #endif
@@ -41,6 +94,9 @@ void after_task_create (task_t *task ) {
 
 void before_task_exit () {
     // put your customization here
+    taskExec->ticks_executados = systime() - taskExec->ticks_executados; 
+    printf("\n Task %d exit: execution time %d ms, processor time %d ms, %d activations", taskExec->id, taskExec->ticks_executados, 
+    taskExec->ticks_processador, taskExec->activations );
 #ifdef DEBUG
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
@@ -61,7 +117,8 @@ void before_task_switch ( task_t *task ) {
 }
 
 void after_task_switch ( task_t *task ) {
-    // put your customization here
+    task->quanta = 40;
+    task->activations += 1;
 #ifdef DEBUG
     printf("\ntask_switch - AFTER - [%d -> %d]", taskExec->id, task->id);
 #endif
