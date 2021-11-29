@@ -20,6 +20,34 @@ struct sigaction action ;
 struct itimerval timer;
 
 
+void task_setprio (task_t *task, int prio) {
+    if (prio < -20) {
+        prio = -20;
+    } else if (prio > 20) {
+        prio = 20;
+    }
+    task->prio = prio;
+    task->prio_aux = prio;
+}
+
+int task_getprio (task_t *task) {
+    if(task == NULL) {
+        return taskExec->prio;
+    }
+    return task->prio;
+}
+
+task_t * scheduler() {
+    // FCFS scheduler
+    task_t* task = readyQueue;
+
+    if(readyQueue == NULL) {
+        return NULL;
+    }
+
+}
+
+
 void tratadorPreemp() {
     //conta ticks
     systemTime += 1;
@@ -95,14 +123,15 @@ void after_task_create (task_t *task ) {
 void before_task_exit () {
     // put your customization here
     taskExec->ticks_executados = systime() - taskExec->ticks_executados; 
-    printf("\n Task %d exit: execution time %d ms, processor time %d ms, %d activations", taskExec->id, taskExec->ticks_executados, 
-    taskExec->ticks_processador, taskExec->activations );
+    
 #ifdef DEBUG
     printf("\ntask_exit - BEFORE - [%d]", taskExec->id);
 #endif
 }
 
 void after_task_exit () {
+    printf("\n Task %d exit: execution time %d ms, processor time %d ms, %d activations \n", taskExec->id, taskExec->ticks_executados, 
+    taskExec->ticks_processador, taskExec->activations );
     // put your customization here
 #ifdef DEBUG
     printf("\ntask_exit - AFTER- [%d]", taskExec->id);
@@ -451,14 +480,6 @@ int after_mqueue_msgs (mqueue_t *queue) {
     printf("\nmqueue_msgs - AFTER - [%d]", taskExec->id);
 #endif
     return 0;
-}
-
-task_t * scheduler() {
-    // FCFS scheduler
-    if ( readyQueue != NULL ) {
-        return readyQueue;
-    }
-    return NULL;
 }
 
 
